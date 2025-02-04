@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Scraper Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px 0;
+        }
+        #response {
+            margin-top: 20px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Web Scraper Chatbot</h1>
+    <input type="text" id="url" placeholder="Enter website URL">
+    <button onclick="scrape()">Scrape</button>
+    <div id="chat">
+        <input type="text" id="message" placeholder="Ask a question">
+        <button onclick="sendMessage()">Send</button>
+        <div id="response"></div>
+    </div>
+
+    <script>
+        async function scrape() {
+            const url = document.getElementById('url').value;
+            const response = await fetch('/scrape', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ url })
+            });
+            const data = await response.json();
+            console.log(data);  // Log scraped data to the console
+        }
+
+        async function sendMessage() {
+            const message = document.getElementById('message').value;
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ message })
+            });
+            const data = await response.json();
+            document.getElementById('response').innerText = data.response;
+        }
+    </script>
+</body>
+</html>
