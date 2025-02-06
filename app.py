@@ -3,16 +3,15 @@ import sqlite3
 from flask import Flask, render_template, request, jsonify
 from scraper import scrape_website
 from chatbot import GroqChatbot
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
-groq_api_key = os.getenv("GROQ_API_KEY")
+# Hardcoded API Key
+GROQ_API_KEY = "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"  # Replace with your real API key
 
 app = Flask(__name__)
 
 # Initialize Chatbot
-chatbot = GroqChatbot(api_key=groq_api_key)
+chatbot = GroqChatbot() 
+
 
 # Database setup
 DATABASE = "scraped_data.db"
@@ -32,7 +31,7 @@ def init_db():
 
 @app.route('/')
 def index():
-    """Render the main page."""
+    """Render the interactive chat page."""
     return render_template('index.html')
 
 @app.route('/scrape', methods=['POST'])
@@ -61,16 +60,31 @@ def scrape():
         cursor.execute("INSERT INTO scraped_content (url, content) VALUES (?, ?)", (url, scraped_data['text']))
         conn.commit()
 
-    return jsonify({'content': scraped_data['text'], 'cached': False})
+    return jsonify({'message': 'Scraping successful! Data saved in the database.', 'cached': False})
+
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    """Handle the chatbot request."""
+    """Handle the chatbot request with scraped content."""
     user_input = request.json.get('message')
     if not user_input:
         return jsonify({'error': 'No message provided'}), 400
 
-    response = chatbot.generate_response(user_input)
+    # Retrieve the latest scraped content from the database
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT content FROM scraped_content ORDER BY id DESC LIMIT 1")  # Get the latest content
+        row = cursor.fetchone()
+
+    if row:
+        scraped_content = row[0]  # Extract text
+        full_prompt = f"Context: {scraped_content}\n\nUser: {user_input}"
+    else:
+        full_prompt = user_input  # No scraped content, just use user input
+
+    # Send combined prompt to chatbot
+    response = chatbot.generate_response(full_prompt)
+
     return jsonify({'response': response})
 
 if __name__ == '__main__':
