@@ -1,19 +1,12 @@
-import os
 import requests
-from dotenv import load_dotenv
-
-load_dotenv()
 
 class GroqChatbot:
-    def __init__(self, api_key=None):
+    def __init__(self):
         """
-        Initialize the Groq API client.
-
-        Args:
-            api_key (str): Your Groq API key.
+        Initialize the Groq API client with a hardcoded API key.
         """
-        self.api_key = api_key or os.getenv("GROQ_API_KEY")
-        self.api_url = "https://api.groq.com/v1/chat"
+        self.api_key = "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"  # 🔥 Replace this with your real API key
+        self.api_url = "https://api.groq.com/openai/v1/chat/completions"  # ✅ Corrected endpoint
 
     def generate_response(self, message, max_tokens=150, temperature=0.7):
         """
@@ -32,6 +25,7 @@ class GroqChatbot:
             "Content-Type": "application/json"
         }
         payload = {
+            "model": "llama-3.3-70b-versatile",  # ✅ Specify the model
             "messages": [{"role": "user", "content": message}],
             "max_tokens": max_tokens,
             "temperature": temperature
@@ -41,7 +35,8 @@ class GroqChatbot:
             response = requests.post(self.api_url, headers=headers, json=payload)
             response.raise_for_status()
             response_data = response.json()
-            return response_data['choices'][0]['message']['content']
+            return response_data["choices"][0]["message"]["content"]
         
         except requests.exceptions.RequestException as e:
             return f"Error: {str(e)}"
+
